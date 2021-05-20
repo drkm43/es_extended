@@ -1,3 +1,29 @@
+## Changes for this branch
+* All modifications to use [linden_inventory](https://github.com/thelindat/linden_inventory/) have been applied
+* Create principals for moderator, admin, and superadmin (with inherited ace permissions)
+* Removed redundant features and functions that are replaced by the inventory
+
+## Multicharacter (experimental)
+* Full support for my [fork of esx_kashacters](https://github.com/thelindat/esx_multicharacter)
+* Improved interaction with [esx_identity](https://github.com/thelindat/esx_identity)
+* Ensure you check the readme for more details
+* Improved performance and functionality
+* All characters are stored with a modified prefix, instead of modifying the database every time you swap character
+* No framework edits required, they're all included
+
+## Notice!
+* Folder must be named `es_extended` to function properly
+* You must enable and use `spawnmanager`
+* Do not start `basic-gamemode`, and delete the `[maps]` folder from cfx
+* Rememember to add the following to your `server.cfg`
+```
+add_ace resource.es_extended command.add_ace allow
+add_ace resource.es_extended command.add_principal allow
+add_ace resource.es_extended command.remove_principal allow
+add_ace resource.es_extended command.stop allow
+```
+
+
 # es_extended LEGACY / BROKEN / WONTFIX
 
 ### Things hapenning here now https://github.com/ESX-Org/es_extended/tree/develop (WIP)

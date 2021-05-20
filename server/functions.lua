@@ -30,8 +30,6 @@ ESX.RegisterCommand = function(name, group, cb, allowConsole, suggestion)
 	end
 
 	if ESX.RegisteredCommands[name] then
-		print(('[^3WARNING^7] Command ^5"%s" already registered, overriding command'):format(name))
-
 		if ESX.RegisteredCommands[name].suggestion then
 			TriggerClientEvent('chat:removeSuggestion', -1, ('/%s'):format(name))
 		end
@@ -167,12 +165,11 @@ ESX.SavePlayer = function(xPlayer, cb)
 	local asyncTasks = {}
 
 	table.insert(asyncTasks, function(cb2)
-		MySQL.Async.execute('UPDATE users SET accounts = @accounts, job = @job, job_grade = @job_grade, `group` = @group, loadout = @loadout, position = @position, inventory = @inventory WHERE identifier = @identifier', {
+		MySQL.Async.execute('UPDATE users SET accounts = @accounts, job = @job, job_grade = @job_grade, `group` = @group, position = @position, inventory = @inventory WHERE identifier = @identifier', {
 			['@accounts'] = json.encode(xPlayer.getAccounts(true)),
 			['@job'] = xPlayer.job.name,
 			['@job_grade'] = xPlayer.job.grade,
 			['@group'] = xPlayer.getGroup(),
-			['@loadout'] = json.encode(xPlayer.getLoadout(true)),
 			['@position'] = json.encode(xPlayer.getCoords()),
 			['@identifier'] = xPlayer.getIdentifier(),
 			['@inventory'] = json.encode(xPlayer.getInventory(true))
@@ -260,26 +257,6 @@ ESX.GetItemLabel = function(item)
 	if ESX.Items[item] then
 		return ESX.Items[item].label
 	end
-end
-
-ESX.CreatePickup = function(type, name, count, label, playerId, components, tintIndex)
-	local pickupId = (ESX.PickupId == 65635 and 0 or ESX.PickupId + 1)
-	local xPlayer = ESX.GetPlayerFromId(playerId)
-	local coords = xPlayer.getCoords()
-
-	ESX.Pickups[pickupId] = {
-		type = type, name = name,
-		count = count, label = label,
-		coords = coords
-	}
-
-	if type == 'item_weapon' then
-		ESX.Pickups[pickupId].components = components
-		ESX.Pickups[pickupId].tintIndex = tintIndex
-	end
-
-	TriggerClientEvent('esx:createPickup', -1, pickupId, label, coords, type, name, components, tintIndex)
-	ESX.PickupId = pickupId
 end
 
 ESX.DoesJobExist = function(job, grade)
