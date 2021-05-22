@@ -118,7 +118,7 @@ function loadESXPlayer(identifier, playerId, isNew)
 	}
 
 	table.insert(tasks, function(cb)
-		MySQL.Async.fetchAll(''SELECT `accounts`, `job`, `job_grade`, `group`, `position`, `inventory`, `skin`, `firstname`, `lastname`, `dateofbirth`, `sex`, `height` FROM `users` WHERE identifier = @identifier', {
+		MySQL.Async.fetchAll('SELECT `accounts`, `job`, `job_grade`, `group`, `position`, `inventory`, `skin`, `firstname`, `lastname`, `dateofbirth`, `sex`, `height` FROM `users` WHERE identifier = @identifier', {
 			['@identifier'] = identifier
 		}, function(result)
 			local job, grade, jobObject, gradeObject = result[1].job, tostring(result[1].job_grade)
