@@ -118,13 +118,7 @@ function loadESXPlayer(identifier, playerId, isNew)
 	}
 
 	table.insert(tasks, function(cb)
-		local query
-		if Config.Multichar then
-			query = 'SELECT `accounts`, `job`, `job_grade`, `group`, `position`, `inventory`, `skin`, `firstname`, `lastname`, `dateofbirth`, `sex`, `height` FROM `users` WHERE identifier = @identifier'
-		else
-			query = 'SELECT `accounts`, `job`, `job_grade`, `group`, `position`, `inventory`, `skin` FROM `users` WHERE identifier = @identifier'
-		end
-		MySQL.Async.fetchAll(query, {
+		MySQL.Async.fetchAll(''SELECT `accounts`, `job`, `job_grade`, `group`, `position`, `inventory`, `skin`, `firstname`, `lastname`, `dateofbirth`, `sex`, `height` FROM `users` WHERE identifier = @identifier', {
 			['@identifier'] = identifier
 		}, function(result)
 			local job, grade, jobObject, gradeObject = result[1].job, tostring(result[1].job_grade)
@@ -194,15 +188,13 @@ function loadESXPlayer(identifier, playerId, isNew)
 			else if userData.sex == 'f' then userData.skin = {sex=1} else userData.skin = {sex=0} end end
 
 			-- Identity
-			if Config.Multichar then
-				if result[1].firstname and result[1].firstname ~= '' then
-					userData.firstname = result[1].firstname
-					userData.lastname = result[1].lastname
-					userData.playerName = userData.firstname..' '..userData.lastname
-					if result[1].dateofbirth then userData.dateofbirth = result[1].dateofbirth end
-					if result[1].sex then userData.sex = result[1].sex end
-					if result[1].height then userData.height = result[1].height end
-				end
+			if result[1].firstname and result[1].firstname ~= '' then
+				userData.firstname = result[1].firstname
+				userData.lastname = result[1].lastname
+				userData.playerName = userData.firstname..' '..userData.lastname
+				if result[1].dateofbirth then userData.dateofbirth = result[1].dateofbirth end
+				if result[1].sex then userData.sex = result[1].sex end
+				if result[1].height then userData.height = result[1].height end
 			end
 
 			cb()
@@ -213,7 +205,7 @@ function loadESXPlayer(identifier, playerId, isNew)
 		local xPlayer = CreateExtendedPlayer(playerId, identifier, userData.group, userData.accounts, userData.job, userData.playerName, userData.coords)
 		ESX.Players[playerId] = xPlayer
 
-		if Config.Multichar and userData.firstname then 
+		if userData.firstname then 
 			xPlayer.set('firstName', userData.firstname)
 			xPlayer.set('lastName', userData.lastname)
 			if userData.dateofbirth then xPlayer.set('dateofbirth', userData.dateofbirth) end
