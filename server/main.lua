@@ -1,6 +1,10 @@
+local NewPlayer = -1
 Citizen.CreateThread(function()
 	SetMapName('San Andreas')
 	SetGameType('ESX Roleplay')
+	MySQL.Async.store("INSERT INTO users SET ?", function(storeId)
+		NewPlayer = storeId
+	end)
 end)
 
 local awaitingRegistration = {}
@@ -24,7 +28,7 @@ end
 
 function onPlayerJoined(playerId, char, isNew)
 	local identifier = ESX.GetIdentifier(playerId)
-	if char then identifier = 'char'..char..':'..identifier end
+	if char then identifier = char..':'..identifier end
 
 	if identifier then
 		if ESX.GetPlayerFromIdentifier(identifier) then
@@ -60,10 +64,12 @@ function createESXPlayer(identifier, playerId)
 	end
 
 	if not Config.Multichar then
-		MySQL.Async.execute('INSERT INTO users (`accounts`, `identifier`, `group`) VALUES (@accounts, @identifier, @group)', {
-			['@accounts'] = json.encode(accounts),
-			['@identifier'] = identifier,
-			['@group'] = defaultGroup
+		MySQL.Async.execute(NewPlayer, {
+			{
+				['accounts'] = json.encode(accounts),
+				['identifier'] = identifier,
+				['group'] = defaultGroup,
+			}
 		}, function(rowsChanged)
 			loadESXPlayer(identifier, playerId, true)
 		end)
@@ -75,15 +81,17 @@ function createESXPlayer(identifier, playerId)
 			if awaitingRegistration[playerId] ~= true then data = awaitingRegistration[playerId] break end
 		end
 		awaitingRegistration[playerId] = nil
-		MySQL.Async.execute('INSERT INTO users (`accounts`, `identifier`, `group`, `firstname`, `lastname`, `dateofbirth`, `sex`, `height`) VALUES (@accounts, @identifier, @group, @firstname, @lastname, @dateofbirth, @sex, @height)', {
-			['@accounts'] = json.encode(accounts),
-			['@identifier'] = identifier,
-			['@group'] = defaultGroup,
-			['@firstname'] = data.firstname,
-			['@lastname'] = data.lastname,
-			['@dateofbirth'] = data.dateofbirth,
-			['@sex'] = data.sex,
-			['@height'] = data.height,
+		MySQL.Async.execute(NewPlayer, {
+			{
+				['accounts'] = json.encode(accounts),
+				['identifier'] = identifier,
+				['group'] = defaultGroup,
+				['firstname'] = data.firstname,
+				['lastname'] = data.lastname,
+				['dateofbirth'] = data.dateofbirth,
+				['sex'] = data.sex,
+				['height'] = data.height,
+			}
 		}, function(rowsChanged)
 			loadESXPlayer(identifier, playerId, true)
 		end)
@@ -165,8 +173,8 @@ function loadESXPlayer(identifier, playerId, isNew)
 			if gradeObject.skin_male then userData.job.skin_male = json.decode(gradeObject.skin_male) end
 			if gradeObject.skin_female then userData.job.skin_female = json.decode(gradeObject.skin_female) end
 
-          	-- Inventory
-          	if result[1].inventory and result[1].inventory ~= '' then
+			-- Inventory
+			if result[1].inventory and result[1].inventory ~= '' then
 				userData.inventory = json.decode(result[1].inventory)
 			end
 
@@ -185,7 +193,9 @@ function loadESXPlayer(identifier, playerId, isNew)
 			-- Skin
 			if result[1].skin and result[1].skin ~= '' then
 				userData.skin = json.decode(result[1].skin)
-			else if userData.sex == 'f' then userData.skin = {sex=1} else userData.skin = {sex=0} end end
+			else
+				if userData.sex == 'f' then userData.skin = {sex=1} else userData.skin = {sex=0} end
+			end
 
 			-- Identity
 			if result[1].firstname and result[1].firstname ~= '' then
@@ -223,7 +233,6 @@ function loadESXPlayer(identifier, playerId, isNew)
 			inventory = xPlayer.getInventory(),
 			job = xPlayer.getJob(),
 			loadout = {},
-			maxWeight = xPlayer.getMaxWeight(),
 			money = xPlayer.getMoney(),
 			skin = userData.skin
 		}, isNew)
@@ -272,38 +281,10 @@ end
 RegisterNetEvent('esx:updateCoords')
 AddEventHandler('esx:updateCoords', function(coords)
 	local xPlayer = ESX.GetPlayerFromId(source)
+
 	if xPlayer then
-		if coords == nil then
-			local ped = GetPlayerPed(source)
-			coords = GetEntityCoords(ped)
-		end
 		xPlayer.updateCoords(coords)
 	end
-end)
-
-RegisterNetEvent('esx:updateWeaponAmmo')
-AddEventHandler('esx:updateWeaponAmmo', function(weaponName, ammoCount)
-	--
-end)
-
-RegisterNetEvent('esx:giveInventoryItem')
-AddEventHandler('esx:giveInventoryItem', function(target, type, itemName, itemCount)
-	--
-end)
-
-RegisterNetEvent('esx:removeInventoryItem')
-AddEventHandler('esx:removeInventoryItem', function(type, itemName, itemCount)
-	--
-end)
-
-RegisterNetEvent('esx:useItem')
-AddEventHandler('esx:useItem', function(itemName)
-	--
-end)
-
-RegisterNetEvent('esx:onPickup')
-AddEventHandler('esx:onPickup', function(pickupId)
-	--
 end)
 
 ESX.RegisterServerCallback('esx:getPlayerData', function(source, cb)
@@ -351,7 +332,7 @@ end)
 AddEventHandler('txAdmin:events:scheduledRestart', function(eventData)
   if eventData.secondsRemaining == 60 then
     Citizen.CreateThread(function()
-      Citizen.Wait(40000)
+      Citizen.Wait(30000)
       ESX.SavePlayers()
      end)
   end
@@ -364,7 +345,7 @@ Citizen.CreateThread(
 		if vRaw then
 			local v = json.decode(vRaw)
 			PerformHttpRequest(
-				'https://raw.githubusercontent.com/esx-framework/es_extended/legacy/version.json',
+				'https://raw.githubusercontent.com/thelindat/es_extended/linden/version.json',
 				function(code, res, headers)
 					if code == 200 then
 						local rv = json.decode(res)
@@ -376,7 +357,7 @@ Citizen.CreateThread(
 ^1----------------------------------------------------------------------
 ^1URGENT: YOUR ES_EXTENDED IS OUTDATED!
 ^1COMMIT UPDATE: ^5%s AVAILABLE
-^1DOWNLOAD:^5 https://github.com/esx-framework/es_extended/tree/legacy
+^1DOWNLOAD:^5 https://github.com/thelindat/es_extended
 ^1CHANGELOG:^5 %s
 ^1-----------------------------------------------------------------------
 ]]):format(
@@ -405,9 +386,9 @@ Citizen.CreateThread(
 						print(
 							([[
 ^1----------------------------------------------------------------------
-^1URGENT: YOUR ES_EXTENDED IS OUTDATATED!!!
+^1URGENT: YOUR ES_EXTENDED IS OUTDATED!!!
 ^1COMMIT UPDATE: ^5%s AVAILABLE
-^1DOWNLOAD:^5 https://github.com/esx-framework/es_extended/tree/legacy
+^1DOWNLOAD:^5 https://github.com/thelindat/es_extended
 ^1CHANGELOG:^5 %s
 ^1-----------------------------------------------------------------------
 ]]):format(

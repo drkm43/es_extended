@@ -142,12 +142,9 @@ ESX.UI.HUD.RemoveElement = function(name)
 end
 
 ESX.UI.HUD.Reset = function()
-	for i=1, #ESX.UI.HUD.RegisteredElements, 1 do
-		SendNUIMessage({
-			action    = 'deleteHUDElement',
-			name      = ESX.UI.HUD.RegisteredElements[i]
-		})
-	end
+	SendNUIMessage({
+		action    = 'resetHUDElements'
+	})
 	ESX.UI.HUD.RegisteredElements = {}
 end
 
@@ -287,15 +284,6 @@ end
 
 ESX.UI.Menu.IsOpen = function(type, namespace, name)
 	return ESX.UI.Menu.GetOpened(type, namespace, name) ~= nil
-end
-
-ESX.UI.ShowInventoryItemNotification = function(add, item, count)
-	SendNUIMessage({
-		action = 'inventoryNotification',
-		add    = add,
-		item   = item,
-		count  = count
-	})
 end
 
 ESX.Game.GetPedMugshot = function(ped, transparent)
@@ -709,13 +697,20 @@ ESX.Game.SetVehicleProperties = function(vehicle, props)
 	end
 end
 
-ESX.Game.Utils.DrawText3D = function(coords, text, scale, font)
+ESX.Game.Utils.DrawText3D = function(coords, text, size, font, rect)
 	local vector = type(coords) == "vector3" and coords or vec(coords.x, coords.y, coords.z)
 
-	if not scale then scale = 0.35 end
-	if not font then font = 4 end
+	local camCoords = GetGameplayCamCoords()
+	local distance = #(vector - camCoords)
 
-	SetTextScale(scale, scale)
+	if not size then size = 1 end
+	if not font then font = 0 end
+
+	local scale = (size / distance) * 2
+	local fov = (1 / GetGameplayCamFov()) * 100
+	scale = scale * fov
+
+	SetTextScale(0.0 * scale, 0.55 * scale)
 	SetTextFont(font)
 	SetTextProportional(1)
 	SetTextColour(255, 255, 255, 215)
@@ -724,8 +719,10 @@ ESX.Game.Utils.DrawText3D = function(coords, text, scale, font)
 	AddTextComponentString(text)
 	SetDrawOrigin(vector.xyz, 0)
 	DrawText(0.0, 0.0)
-	local scaleFactor = scale / 0.35
-	DrawRect(0.0, 0.0 + 0.0111 * scaleFactor, 0.017 + (string.len(text) / 370) * scaleFactor, 0.03 * scaleFactor, 0, 0, 0, 75)
+	if rect then
+		local length = string.len(text:gsub('~.-~', ''))/13.5
+		DrawRect(0.0, 0.18 / distance, length / distance, 0.04 * scale , 0,0,0, 75)
+	end
 	ClearDrawOrigin()
 end
 

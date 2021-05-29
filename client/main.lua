@@ -1,5 +1,3 @@
-local isPaused, isDead = false, false
-
 Citizen.CreateThread(function()
 	while NetworkIsPlayerActive(PlayerId()) and not Config.Multichar do
 		Citizen.Wait(5)
@@ -43,8 +41,8 @@ AddEventHandler('esx:playerLoaded', function(playerData, isNew)
 	end
 
 	if Config.Multichar then
-		TriggerEvent('esx_multicharacter:SpawnCharacter', playerData.coords, isNew, playerData.skin)
-		Citizen.Wait(4000)
+		TriggerEvent('esx_multicharacter:SpawnCharacter', playerData.coords, isNew)
+		Citizen.Wait(3000)
 	else
 		exports.spawnmanager:spawnPlayer({
 			x = playerData.coords.x,
@@ -52,24 +50,20 @@ AddEventHandler('esx:playerLoaded', function(playerData, isNew)
 			z = playerData.coords.z + 0.25,
 			heading = playerData.coords.heading,
 			model = `mp_m_freemode_01`,
-			skipFade = true
+			skipFade = false
 		}, function()
 			TriggerEvent('esx:onPlayerSpawn')
 			TriggerEvent('playerSpawned') -- compatibility with old scripts
+			if isNew then
+				if playerData.skin.sex == 0 then
+					TriggerEvent('skinchanger:loadDefaultModel', true)
+				else
+					TriggerEvent('skinchanger:loadDefaultModel', false)
+				end
+			elseif playerData.skin then TriggerEvent('skinchanger:loadSkin', playerData.skin) end
+			TriggerEvent('esx:loadingScreenOff')
+			FreezeEntityPosition(ESX.PlayerData.ped, false)
 		end)
-		Citizen.Wait(1000)
-		if isNew then
-			if playerData.skin.sex == 0 then
-				TriggerEvent('skinchanger:loadDefaultModel', true)
-			else
-				TriggerEvent('skinchanger:loadDefaultModel', false)
-			end
-		elseif playerData.skin then TriggerEvent('skinchanger:loadSkin', playerData.skin) end
-		ShutdownLoadingScreen()
-		ShutdownLoadingScreenNui()
-		TriggerEvent('esx:loadingScreenOff')
-		DoScreenFadeIn(500)
-		FreezeEntityPosition(ESX.PlayerData.ped, false)
 	end
 	StartServerSyncLoops()
 end)
@@ -84,14 +78,21 @@ AddEventHandler('esx:onPlayerSpawn', function()
 	local playerPed = PlayerPedId()
 	if ESX.PlayerData.ped ~= playerPed then ESX.SetPlayerData('ped', playerPed) end
 	ESX.SetPlayerData('dead', false)
-	isDead = false
 end)
 
 AddEventHandler('esx:onPlayerDeath', function()
 	local playerPed = PlayerPedId()
 	if ESX.PlayerData.ped ~= playerPed then ESX.SetPlayerData('ped', playerPed) end
 	ESX.SetPlayerData('dead', true)
-	isDead = true
+end)
+
+AddEventHandler('skinchanger:modelLoaded', function()
+	while not ESX.PlayerLoaded do
+		Citizen.Wait(100)
+	end
+
+	local playerPed = PlayerPedId()
+	if ESX.PlayerData.ped ~= playerPed then ESX.SetPlayerData('ped', playerPed) end
 end)
 
 AddEventHandler('esx:restoreLoadout', function()
@@ -197,6 +198,7 @@ end)
 -- Pause menu disables HUD display
 if Config.EnableHud then
 	Citizen.CreateThread(function()
+		local isPaused = false
 		while true do
 			Citizen.Wait(300)
 
@@ -240,6 +242,7 @@ function StartServerSyncLoops()
 	end)
 end
 
+-- disable wanted level
 if not Config.EnableWantedLevel then
 	ClearPlayerWantedLevel(PlayerId())
 	SetMaxWantedLevel(0)

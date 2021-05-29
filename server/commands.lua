@@ -1,8 +1,4 @@
-ExecuteCommand('add_principal group.moderator group.user')
-ExecuteCommand('add_principal group.admin group.moderator')
 ExecuteCommand('add_principal group.superadmin group.admin')
-ExecuteCommand('add_ace group.superadmin command allow')
-ExecuteCommand('add_ace group.superadmin command.quit deny')
 
 ESX.RegisterCommand('setcoords', 'admin', function(xPlayer, args, showError)
 	xPlayer.setCoords({x = args.x, y = args.y, z = args.z})
@@ -36,30 +32,6 @@ ESX.RegisterCommand({'cardel', 'dv'}, 'admin', function(xPlayer, args, showError
 	xPlayer.triggerEvent('esx:deleteVehicle', args.radius)
 end, false, {help = _U('command_cardel'), validate = false, arguments = {
 	{name = 'radius', help = _U('command_cardel_radius'), type = 'any'}
-}})
-
-ESX.RegisterCommand('setaccountmoney', 'admin', function(xPlayer, args, showError)
-	if args.playerId.getAccount(args.account) then
-		args.playerId.setAccountMoney(args.account, args.amount)
-	else
-		showError(_U('command_giveaccountmoney_invalid'))
-	end
-end, true, {help = _U('command_setaccountmoney'), validate = true, arguments = {
-	{name = 'playerId', help = _U('commandgeneric_playerid'), type = 'player'},
-	{name = 'account', help = _U('command_giveaccountmoney_account'), type = 'string'},
-	{name = 'amount', help = _U('command_setaccountmoney_amount'), type = 'number'}
-}})
-
-ESX.RegisterCommand('giveaccountmoney', 'admin', function(xPlayer, args, showError)
-	if args.playerId.getAccount(args.account) then
-		args.playerId.addAccountMoney(args.account, args.amount)
-	else
-		showError(_U('command_giveaccountmoney_invalid'))
-	end
-end, true, {help = _U('command_giveaccountmoney'), validate = true, arguments = {
-	{name = 'playerId', help = _U('commandgeneric_playerid'), type = 'player'},
-	{name = 'account', help = _U('command_giveaccountmoney_account'), type = 'string'},
-	{name = 'amount', help = _U('command_giveaccountmoney_amount'), type = 'number'}
 }})
 
 ESX.RegisterCommand({'clear', 'cls'}, 'user', function(xPlayer, args, showError)
@@ -104,17 +76,6 @@ ESX.RegisterCommand('info', {"user", "admin"}, function(xPlayer, args, showError
 
 ESX.RegisterCommand('coords', "admin", function(xPlayer, args, showError)
 	print("".. xPlayer.getName().. ": ^5".. xPlayer.getCoords(true))
-end, true)
-
-ESX.RegisterCommand('sv_restart', "admin", function(xPlayer, args, showError)
-	Citizen.CreateThread(function()
-		ESX.SavePlayers()
-		for _, playerId in ipairs(GetPlayers()) do
-			DropPlayer(playerId, "Server Restart")
-		end
-		print('^2[INFO] ^1 Server Restarting, Please Wait :)')
-		while true do end
-	end)
 end, true)
 
 ESX.RegisterCommand('tpm', "admin", function(xPlayer, args, showError)

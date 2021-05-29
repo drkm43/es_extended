@@ -1,26 +1,36 @@
+<h4 align='center'>Notice: This is an unofficial fork of ESX Legacy<br>You must be using <a href='https://github.com/thelindat/linden_inventory'>my inventory</a> for this resource to work</h4>
+
+
 ## Changes for this branch
-* All modifications to use [linden_inventory](https://github.com/thelindat/linden_inventory/) have been applied
-* Create principals for moderator, admin, and superadmin (with inherited ace permissions)
-* Removed redundant features and functions that are replaced by the inventory
+* All necessary modifications for linden_inventory have been applied
+* Superadmin is not forcibly disabled and will inherit all ace permissions from admin
+* Redundant features and functions that are handled by the inventory have been removed
+
 
 ## Multicharacter (experimental)
-* Full support for my [fork of esx_kashacters](https://github.com/thelindat/esx_multicharacter)
-* Improved interaction with [esx_identity](https://github.com/thelindat/esx_identity)
-* Ensure you check the readme for more details
-* Improved performance and functionality
-* All characters are stored with a modified prefix, instead of modifying the database every time you swap character
-* No framework edits required, they're all included
+* You can enable support for [esx_multicharacter](https://github.com/thelindat/esx_multicharacter) in the config
+* Improved support for identities (set identity variables when loading player)
+
 
 ## Notice!
-* Folder must be named `es_extended` to function properly
-* You must enable and use `spawnmanager`
+* You must name the folder `es_extended` to function properly
 * Do not start `basic-gamemode`, and delete the `[maps]` folder from cfx
-* Rememember to add the following to your `server.cfg`
+* Spawnmanager is a dependency for ESX Legacy, ensure you are using the [unedited version](https://github.com/citizenfx/cfx-server-data/tree/master/resources/%5Bmanagers%5D/spawnmanager)
+* Add the following to your `server.cfg`
 ```
 add_ace resource.es_extended command.add_ace allow
 add_ace resource.es_extended command.add_principal allow
 add_ace resource.es_extended command.remove_principal allow
 add_ace resource.es_extended command.stop allow
+```
+* For simple ace permissions you can add the following
+```
+add_ace group.admin command allow
+add_ace group.admin command.quit deny
+
+add_principal group.moderator group.user
+add_principal group.admin group.moderator
+add_principal group.superadmin group.admin
 ```
 
 

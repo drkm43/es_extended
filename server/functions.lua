@@ -30,6 +30,8 @@ ESX.RegisterCommand = function(name, group, cb, allowConsole, suggestion)
 	end
 
 	if ESX.RegisteredCommands[name] then
+		--print(('[^3WARNING^7] Command ^5"%s" already registered, overriding command'):format(name))
+
 		if ESX.RegisteredCommands[name].suggestion then
 			TriggerClientEvent('chat:removeSuggestion', -1, ('/%s'):format(name))
 		end
@@ -161,18 +163,24 @@ ESX.TriggerServerCallback = function(name, requestId, source, cb, ...)
 	end
 end
 
+local savePlayers = -1
+Citizen.CreateThread(function()
+	savePlayers = MySQL.Sync.store("UPDATE users SET ? WHERE ?")
+end)
+
 ESX.SavePlayer = function(xPlayer, cb)
 	local asyncTasks = {}
 
 	table.insert(asyncTasks, function(cb2)
-		MySQL.Async.execute('UPDATE users SET accounts = @accounts, job = @job, job_grade = @job_grade, `group` = @group, position = @position, inventory = @inventory WHERE identifier = @identifier', {
-			['@accounts'] = json.encode(xPlayer.getAccounts(true)),
-			['@job'] = xPlayer.job.name,
-			['@job_grade'] = xPlayer.job.grade,
-			['@group'] = xPlayer.getGroup(),
-			['@position'] = json.encode(xPlayer.getCoords()),
-			['@identifier'] = xPlayer.getIdentifier(),
-			['@inventory'] = json.encode(xPlayer.getInventory(true))
+		MySQL.Async.execute(savePlayers, {
+			{
+				['accounts'] = json.encode(xPlayer.getAccounts(true)),
+				['job'] = xPlayer.job.name,
+				['job_grade'] = xPlayer.job.grade,
+				['group'] = xPlayer.getGroup(),
+				['position'] = json.encode(xPlayer.getCoords()),
+				['inventory'] = json.encode(xPlayer.getInventory(true))
+			}, {['identifier'] = xPlayer.getIdentifier()}
 		}, function(rowsChanged)
 			cb2()
 		end)

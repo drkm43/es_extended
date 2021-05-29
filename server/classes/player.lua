@@ -260,7 +260,7 @@ function CreateExtendedPlayer(playerId, identifier, group, accounts, job, name, 
   
 	self.getPlayerSlot = function(slot)
 		return exports['linden_inventory']:getPlayerSlot(self, slot)
-	end  
+	end
 
 	return self
 end
