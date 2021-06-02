@@ -12,33 +12,8 @@ RegisterNetEvent('esx:playerLoaded')
 AddEventHandler('esx:playerLoaded', function(playerData, isNew)
 	ESX.PlayerLoaded = true
 	ESX.PlayerData = playerData
-	ESX.PlayerData.ped = PlayerPedId()
 
-	FreezeEntityPosition(ESX.PlayerData.ped, true)
-	
-	-- enable PVP
-	if Config.EnablePVP then
-		SetCanAttackFriendly(ESX.PlayerData.ped, true, false)
-		NetworkSetFriendlyFireOption(true)
-	end
-
-	if Config.EnableHud then
-		for k,v in ipairs(playerData.accounts) do
-			local accountTpl = '<div><img src="img/accounts/' .. v.name .. '.png"/>&nbsp;{{money}}</div>'
-			ESX.UI.HUD.RegisterElement('account_' .. v.name, k, 0, accountTpl, {money = ESX.Math.GroupDigits(v.money)})
-		end
-
-		local jobTpl = '<div>{{job_label}} - {{grade_label}}</div>'
-
-		if playerData.job.grade_label == '' or playerData.job.grade_label == playerData.job.label then
-			jobTpl = '<div>{{job_label}}</div>'
-		end
-
-		ESX.UI.HUD.RegisterElement('job', #playerData.accounts, 0, jobTpl, {
-			job_label = playerData.job.label,
-			grade_label = playerData.job.grade_label
-		})
-	end
+	FreezeEntityPosition(PlayerPedId(), true)
 
 	if Config.Multichar then
 		TriggerEvent('esx_multicharacter:SpawnCharacter', playerData.coords, isNew)
@@ -67,6 +42,31 @@ AddEventHandler('esx:playerLoaded', function(playerData, isNew)
 			ShutdownLoadingScreenNui()
 			FreezeEntityPosition(ESX.PlayerData.ped, false)
 		end)
+	end
+
+	while ESX.PlayerData.ped == nil do Citizen.Wait(20) end
+	-- enable PVP
+	if Config.EnablePVP then
+		SetCanAttackFriendly(ESX.PlayerData.ped, true, false)
+		NetworkSetFriendlyFireOption(true)
+	end
+
+	if Config.EnableHud then
+		for k,v in ipairs(playerData.accounts) do
+			local accountTpl = '<div><img src="img/accounts/' .. v.name .. '.png"/>&nbsp;{{money}}</div>'
+			ESX.UI.HUD.RegisterElement('account_' .. v.name, k, 0, accountTpl, {money = ESX.Math.GroupDigits(v.money)})
+		end
+
+		local jobTpl = '<div>{{job_label}} - {{grade_label}}</div>'
+
+		if playerData.job.grade_label == '' or playerData.job.grade_label == playerData.job.label then
+			jobTpl = '<div>{{job_label}}</div>'
+		end
+
+		ESX.UI.HUD.RegisterElement('job', #playerData.accounts, 0, jobTpl, {
+			job_label = playerData.job.label,
+			grade_label = playerData.job.grade_label
+		})
 	end
 	StartServerSyncLoops()
 end)
