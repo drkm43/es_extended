@@ -9,14 +9,14 @@ end)
 
 
 RegisterNetEvent('esx:playerLoaded')
-AddEventHandler('esx:playerLoaded', function(playerData, isNew)
+AddEventHandler('esx:playerLoaded', function(playerData, isNew, skin)
 	ESX.PlayerLoaded = true
 	ESX.PlayerData = playerData
 
 	FreezeEntityPosition(PlayerPedId(), true)
 
 	if Config.Multichar then
-		TriggerEvent('esx_multicharacter:SpawnCharacter', playerData.coords, isNew, skin)
+		TriggerEvent('esx_multicharacter:SpawnCharacter', playerData.coords, isNew)
 		Citizen.Wait(3000)
 	else
 		exports.spawnmanager:spawnPlayer({
