@@ -243,9 +243,8 @@ function loadESXPlayer(identifier, playerId, isNew)
 			job = xPlayer.getJob(),
 			loadout = {},
 			money = xPlayer.getMoney(),
-			skin = userData.skin,
 			dead = userData.dead
-		}, isNew)
+		}, isNew, userData.skin)
 
 		xPlayer.triggerEvent('esx:registerSuggestions', ESX.RegisteredCommands)
 		print(('[^2INFO^0] Player ^5"%s" ^0has connected to the server. ID: ^5%s^7'):format(xPlayer.getName(), playerId))
