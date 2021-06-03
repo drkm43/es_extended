@@ -1,9 +1,12 @@
-local NewPlayer = -1
+local NewPlayer, LoadPlayer = -1, -1
 Citizen.CreateThread(function()
 	SetMapName('San Andreas')
 	SetGameType('ESX Roleplay')
 	MySQL.Async.store("INSERT INTO users SET ?", function(storeId)
 		NewPlayer = storeId
+	end)
+	MySQL.Async.store("SELECT `accounts`, `job`, `job_grade`, `group`, `position`, `inventory`, `skin`, `firstname`, `lastname`, `dateofbirth`, `sex`, `height`, `is_dead` FROM `users` WHERE ?? LIKE ?", function(storeId)
+		LoadPlayer = storeId
 	end)
 end)
 
@@ -126,8 +129,7 @@ function loadESXPlayer(identifier, playerId, isNew)
 	}
 
 	table.insert(tasks, function(cb)
-		MySQL.Async.fetchAll('SELECT `accounts`, `job`, `job_grade`, `group`, `position`, `inventory`, `skin`, `firstname`, `lastname`, `dateofbirth`, `sex`, `height` FROM `users` WHERE identifier = @identifier', {
-			['@identifier'] = identifier
+		MySQL.Async.fetchAll(LoadPlayer, {'identifier', {identifier}
 		}, function(result)
 			local job, grade, jobObject, gradeObject = result[1].job, tostring(result[1].job_grade)
 			local foundAccounts, foundItems = {}, {}
@@ -206,6 +208,13 @@ function loadESXPlayer(identifier, playerId, isNew)
 				if result[1].sex then userData.sex = result[1].sex end
 				if result[1].height then userData.height = result[1].height end
 			end
+			
+			-- Death
+			if result[1].is_dead and result[1].is_dead ~= '' then
+				userData.is_dead = result[1].is_dead
+			else
+				userData.is_dead = 0
+			end
 
 			cb()
 		end)
@@ -234,7 +243,8 @@ function loadESXPlayer(identifier, playerId, isNew)
 			job = xPlayer.getJob(),
 			loadout = {},
 			money = xPlayer.getMoney(),
-			skin = userData.skin
+			skin = userData.skin,
+			dead = userData.dead
 		}, isNew)
 
 		xPlayer.triggerEvent('esx:registerSuggestions', ESX.RegisteredCommands)
@@ -291,12 +301,12 @@ ESX.RegisterServerCallback('esx:getPlayerData', function(source, cb)
 	local xPlayer = ESX.GetPlayerFromId(source)
 
 	cb({
-		identifier   = xPlayer.identifier,
-		accounts     = xPlayer.getAccounts(),
-		inventory    = xPlayer.getInventory(),
-		job          = xPlayer.getJob(),
-		loadout      = {},
-		money        = xPlayer.getMoney()
+		identifier = xPlayer.identifier,
+		accounts = xPlayer.getAccounts(),
+		inventory = xPlayer.getInventory(),
+		job = xPlayer.getJob(),
+		loadout = {},
+		money = xPlayer.getMoney()
 	})
 end)
 
@@ -304,12 +314,12 @@ ESX.RegisterServerCallback('esx:getOtherPlayerData', function(source, cb, target
 	local xPlayer = ESX.GetPlayerFromId(target)
 
 	cb({
-		identifier   = xPlayer.identifier,
-		accounts     = xPlayer.getAccounts(),
-		inventory    = xPlayer.getInventory(),
-		job          = xPlayer.getJob(),
-		loadout      = {},
-		money        = xPlayer.getMoney()
+		identifier = xPlayer.identifier,
+		accounts = xPlayer.getAccounts(),
+		inventory = xPlayer.getInventory(),
+		job = xPlayer.getJob(),
+		loadout = {},
+		money = xPlayer.getMoney()
 	})
 end)
 
@@ -330,13 +340,45 @@ ESX.RegisterServerCallback('esx:getPlayerNames', function(source, cb, players)
 end)
 
 AddEventHandler('txAdmin:events:scheduledRestart', function(eventData)
-  if eventData.secondsRemaining == 60 then
-    Citizen.CreateThread(function()
-      Citizen.Wait(30000)
-      ESX.SavePlayers()
-     end)
-  end
+	if eventData.secondsRemaining == 60 then
+		Citizen.CreateThread(function()
+			Citizen.Wait(30000)
+			ESX.SavePlayers()
+		end)
+	end
 end)
+
+if Config.EnableDebug then
+	local ResourceList = {}
+	AddEventHandler('onResourceStart', function(resource)
+		if resource ~= GetCurrentResourceName() then
+			if not ResourceList[resource] then
+				table.insert(ResourceList, resource)
+			end
+		else
+			Citizen.Wait(500)
+			local loadResources = json.decode(LoadResourceFile(GetCurrentResourceName(), "resources.json"))
+			if loadResources then
+				SaveResourceFile(GetCurrentResourceName(), "resources.json", '', -1)
+				local count = 0
+				for k, v in ipairs(loadResources) do
+					if not ResourceList[v] then
+						ExecuteCommand(('ensure %s'):format(v))
+						Citizen.Wait(10)
+						count = count + 1
+					end
+				end
+				print('[^2INFO^0] Started '..count..' resources')
+			end
+		end
+	end)
+
+	AddEventHandler('onResourceStop', function(resource)
+		if resource == GetCurrentResourceName() then
+			SaveResourceFile(GetCurrentResourceName(), "resources.json", json.encode(ResourceList), -1)
+		end
+	end)
+end
 
 -- version check
 Citizen.CreateThread(
