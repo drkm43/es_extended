@@ -16,7 +16,7 @@ AddEventHandler('esx:playerLoaded', function(playerData, isNew)
 	FreezeEntityPosition(PlayerPedId(), true)
 
 	if Config.Multichar then
-		TriggerEvent('esx_multicharacter:SpawnCharacter', playerData.coords, isNew)
+		TriggerEvent('esx_multicharacter:SpawnCharacter', playerData.coords, isNew, skin)
 		Citizen.Wait(3000)
 	else
 		exports.spawnmanager:spawnPlayer({
@@ -31,12 +31,12 @@ AddEventHandler('esx:playerLoaded', function(playerData, isNew)
 			TriggerEvent('esx:onPlayerSpawn')
 			TriggerEvent('playerSpawned') -- compatibility with old scripts
 			if isNew then
-				if playerData.skin.sex == 0 then
+				if skin.sex == 0 then
 					TriggerEvent('skinchanger:loadDefaultModel', true)
 				else
 					TriggerEvent('skinchanger:loadDefaultModel', false)
 				end
-			elseif playerData.skin then TriggerEvent('skinchanger:loadSkin', playerData.skin) end
+			elseif skin then TriggerEvent('skinchanger:loadSkin', skin) end
 			TriggerEvent('esx:loadingScreenOff')
 			ShutdownLoadingScreen()
 			ShutdownLoadingScreenNui()
