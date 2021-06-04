@@ -5,7 +5,11 @@ Citizen.CreateThread(function()
 	MySQL.Async.store("INSERT INTO users SET ?", function(storeId)
 		NewPlayer = storeId
 	end)
-	MySQL.Async.store("SELECT `accounts`, `job`, `job_grade`, `group`, `position`, `inventory`, `skin`, `firstname`, `lastname`, `dateofbirth`, `sex`, `height`, `is_dead` FROM `users` WHERE ?? LIKE ?", function(storeId)
+	
+	local query = '`accounts`, `job`, `job_grade`, `group`, `position`, `inventory`, `skin`'
+	if Config.Multichar or Config.Identity then query = query..', `firstname`, `lastname`, `dateofbirth`, `sex`, `height`' end
+
+	MySQL.Async.store("SELECT "..query.." FROM `users` WHERE ?? LIKE ?", function(storeId)
 		LoadPlayer = storeId
 	end)
 end)
@@ -208,13 +212,6 @@ function loadESXPlayer(identifier, playerId, isNew)
 				if result[1].sex then userData.sex = result[1].sex end
 				if result[1].height then userData.height = result[1].height end
 			end
-			
-			-- Death
-			if result[1].is_dead and result[1].is_dead ~= '' then
-				userData.is_dead = result[1].is_dead
-			else
-				userData.is_dead = 0
-			end
 
 			cb()
 		end)
@@ -243,7 +240,7 @@ function loadESXPlayer(identifier, playerId, isNew)
 			job = xPlayer.getJob(),
 			loadout = {},
 			money = xPlayer.getMoney(),
-			dead = userData.dead
+			dead = 0
 		}, isNew, userData.skin)
 
 		xPlayer.triggerEvent('esx:registerSuggestions', ESX.RegisteredCommands)
