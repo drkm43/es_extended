@@ -351,7 +351,7 @@ if Config.EnableDebug then
 	local ResourceList = {}
 	AddEventHandler('onResourceStart', function(resource)
 		if resource ~= GetCurrentResourceName() then
-			if not ResourceList[resource] then
+			if ESX.Table.IndexOf(ResourceList, resource) == -1 then
 				table.insert(ResourceList, resource)
 			end
 		else
