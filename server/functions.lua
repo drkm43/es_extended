@@ -165,7 +165,7 @@ end
 
 local savePlayers = -1
 Citizen.CreateThread(function()
-	savePlayers = MySQL.Sync.store("UPDATE users SET ? WHERE ?")
+	savePlayers = MySQL.Sync.store("UPDATE users SET `accounts` = ?, `job` = ?, `job_grade` = ?, `group` = ?, `position`= ?, `inventory` = ? WHERE `identifier` = ?")
 end)
 
 ESX.SavePlayer = function(xPlayer, cb)
@@ -173,14 +173,13 @@ ESX.SavePlayer = function(xPlayer, cb)
 
 	table.insert(asyncTasks, function(cb2)
 		MySQL.Async.execute(savePlayers, {
-			{
-				['accounts'] = json.encode(xPlayer.getAccounts(true)),
-				['job'] = xPlayer.job.name,
-				['job_grade'] = xPlayer.job.grade,
-				['group'] = xPlayer.getGroup(),
-				['position'] = json.encode(xPlayer.getCoords()),
-				['inventory'] = json.encode(xPlayer.getInventory(true))
-			}, {['identifier'] = xPlayer.getIdentifier()}
+				json.encode(xPlayer.getAccounts(true)),
+				xPlayer.job.name,
+				xPlayer.job.grade,
+				xPlayer.getGroup(),
+				json.encode(xPlayer.getCoords()),
+				json.encode(xPlayer.getInventory(true)),
+				xPlayer.getIdentifier()
 		}, function(rowsChanged)
 			cb2()
 		end)
