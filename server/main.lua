@@ -2,14 +2,21 @@ local NewPlayer, LoadPlayer = -1, -1
 Citizen.CreateThread(function()
 	SetMapName('San Andreas')
 	SetGameType('ESX Roleplay')
-	MySQL.Async.store("INSERT INTO users SET ?", function(storeId)
-		NewPlayer = storeId
-	end)
 	
-	local query = '`accounts`, `job`, `job_grade`, `group`, `position`, `inventory`, `skin`'
-	if Config.Multichar or Config.Identity then query = query..', `firstname`, `lastname`, `dateofbirth`, `sex`, `height`' end
+	local query = '`accounts`, `job`, `job_grade`, `group`, `position`, `inventory`, `skin`' -- Select these fields from the database
 
-	MySQL.Async.store("SELECT "..query.." FROM `users` WHERE ?? LIKE ?", function(storeId)
+	if Config.Multichar or Config.Identity then
+		query = query..', `firstname`, `lastname`, `dateofbirth`, `sex`, `height`' -- append these fields to the select query
+		MySQL.Async.store("INSERT INTO `users` SET `accounts` = ?, `identifier` = ?, `group` = ?, `firstname` = ?, `lastname` = ?, `dateofbirth` = ?, `sex` = ?, `height` = ?", function(storeId)
+			NewPlayer = storeId
+		end)
+	else
+		MySQL.Async.store("INSERT INTO `users` SET `accounts` = ?, `identifier` = ?, `group` = ?", function(storeId)
+			NewPlayer = storeId
+		end)
+	end
+
+	MySQL.Async.store("SELECT "..query.." FROM `users` WHERE identifier = ?", function(storeId)
 		LoadPlayer = storeId
 	end)
 end)
@@ -70,13 +77,11 @@ function createESXPlayer(identifier, playerId)
 		defaultGroup = "user"
 	end
 
-	if not Config.Multichar then
+	if not Config.Multichar and not Config.Identity then
 		MySQL.Async.execute(NewPlayer, {
-			{
-				['accounts'] = json.encode(accounts),
-				['identifier'] = identifier,
-				['group'] = defaultGroup,
-			}
+				json.encode(accounts),
+				identifier,
+				defaultGroup,
 		}, function(rowsChanged)
 			loadESXPlayer(identifier, playerId, true)
 		end)
@@ -89,16 +94,14 @@ function createESXPlayer(identifier, playerId)
 		end
 		awaitingRegistration[playerId] = nil
 		MySQL.Async.execute(NewPlayer, {
-			{
-				['accounts'] = json.encode(accounts),
-				['identifier'] = identifier,
-				['group'] = defaultGroup,
-				['firstname'] = data.firstname,
-				['lastname'] = data.lastname,
-				['dateofbirth'] = data.dateofbirth,
-				['sex'] = data.sex,
-				['height'] = data.height,
-			}
+				json.encode(accounts),
+				identifier,
+				defaultGroup,
+				data.firstname,
+				data.lastname,
+				data.dateofbirth,
+				data.sex,
+				data.height,
 		}, function(rowsChanged)
 			loadESXPlayer(identifier, playerId, true)
 		end)
@@ -133,7 +136,7 @@ function loadESXPlayer(identifier, playerId, isNew)
 	}
 
 	table.insert(tasks, function(cb)
-		MySQL.Async.fetchAll(LoadPlayer, {'identifier', {identifier}
+		MySQL.Async.fetchAll(LoadPlayer, { identifier
 		}, function(result)
 			local job, grade, jobObject, gradeObject = result[1].job, tostring(result[1].job_grade)
 			local foundAccounts, foundItems = {}, {}
@@ -398,7 +401,7 @@ Citizen.CreateThread(
 ^1DOWNLOAD:^5 https://github.com/thelindat/es_extended
 ^1CHANGELOG:^5 %s
 ^1-----------------------------------------------------------------------
-]]):format(
+^0]]):format(
 									rv.commit,
 									rv.changelog
 								)
@@ -413,7 +416,7 @@ Citizen.CreateThread(
 ^5COMMIT:^0 %s
 ^5CHANGELOG:^0 %s
 ^8-------------------------------------------------------
-]]):format(
+^0]]):format(
 								 	rv.version,
 									rv.commit,
 									rv.changelog
@@ -429,7 +432,7 @@ Citizen.CreateThread(
 ^1DOWNLOAD:^5 https://github.com/thelindat/es_extended
 ^1CHANGELOG:^5 %s
 ^1-----------------------------------------------------------------------
-]]):format(
+^0]]):format(
 								rv.commit,
 								rv.changelog
 							)
