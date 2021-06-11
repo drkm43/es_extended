@@ -1,7 +1,7 @@
 local NewPlayer, LoadPlayer = -1, -1
 Citizen.CreateThread(function()
 	SetMapName('San Andreas')
-	SetGameType('ESX Roleplay')
+	SetGameType('ESX Legacy')
 	
 	local query = '`accounts`, `job`, `job_grade`, `group`, `position`, `inventory`, `skin`' -- Select these fields from the database
 
@@ -21,18 +21,19 @@ Citizen.CreateThread(function()
 	end)
 end)
 
-local awaitingRegistration = {}
-RegisterNetEvent('esx:onPlayerJoined')
 if Config.Multichar then
-	AddEventHandler('esx_identity:completedRegistration', function(playerId, data)
-		awaitingRegistration[playerId] = data
-	end)
-	AddEventHandler('esx:onPlayerJoined', function(src, char, isNew)
+	AddEventHandler('esx:onPlayerJoined', function(src, char, data)
 		if not ESX.Players[src] then
-			onPlayerJoined(src, char, isNew)
+			local identifier = char..':'..ESX.GetIdentifier(src)
+			if data then
+				createESXPlayer(identifier, src, data)
+			else
+				loadESXPlayer(identifier, src, false)
+			end
 		end
 	end)
 else
+	RegisterNetEvent('esx:onPlayerJoined')
 	AddEventHandler('esx:onPlayerJoined', function()
 		if not ESX.Players[source] then
 			onPlayerJoined(source)
@@ -40,15 +41,13 @@ else
 	end)
 end
 
-function onPlayerJoined(playerId, char, isNew)
+function onPlayerJoined(playerId)
 	local identifier = ESX.GetIdentifier(playerId)
 	if char then identifier = char..':'..identifier end
 
 	if identifier then
 		if ESX.GetPlayerFromIdentifier(identifier) then
 			DropPlayer(playerId, ('there was an error loading your character!\nError code: identifier-active-ingame\n\nThis error is caused by a player on this server who has the same identifier as you have. Make sure you are not playing on the same Rockstar account.\n\nYour Rockstar identifier: %s'):format(identifier))
-		elseif Config.Multichar and isNew then
-			createESXPlayer(identifier, playerId)
 		else
 			MySQL.Async.fetchScalar('SELECT 1 FROM users WHERE identifier = @identifier', {
 				['@identifier'] = identifier
@@ -63,7 +62,7 @@ function onPlayerJoined(playerId, char, isNew)
 	end
 end
 
-function createESXPlayer(identifier, playerId)
+function createESXPlayer(identifier, playerId, data)
 	local accounts = {}
 
 	for account,money in pairs(Config.StartingAccountMoney) do
@@ -86,13 +85,6 @@ function createESXPlayer(identifier, playerId)
 			loadESXPlayer(identifier, playerId, true)
 		end)
 	else
-		local data
-		awaitingRegistration[playerId] = true
-		while true do
-			Citizen.Wait(250)
-			if awaitingRegistration[playerId] ~= true then data = awaitingRegistration[playerId] break end
-		end
-		awaitingRegistration[playerId] = nil
 		MySQL.Async.execute(NewPlayer, {
 				json.encode(accounts),
 				identifier,
@@ -275,7 +267,6 @@ end)
 if Config.Multichar then
 	AddEventHandler('esx:playerLogout', function(playerId)
 		local xPlayer = ESX.GetPlayerFromId(playerId)
-		awaitingRegistration[playerId] = nil
 		if xPlayer then
 			TriggerEvent('esx:playerDropped', playerId, reason)
 
