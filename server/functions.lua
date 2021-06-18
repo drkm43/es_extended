@@ -281,3 +281,11 @@ ESX.DoesJobExist = function(job, grade)
 
 	return false
 end
+
+ESX.GetJobs = function()
+	return ESX.Jobs
+end
+
+ESX.GetItems = function()
+	return ESX.Items
+end
