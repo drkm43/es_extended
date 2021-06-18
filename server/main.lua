@@ -1,12 +1,14 @@
 local NewPlayer, LoadPlayer = -1, -1
 Citizen.CreateThread(function()
 	SetMapName('San Andreas')
-	SetGameType('ESX Roleplay')
+	SetGameType('ESX Legacy')
 	
 	local query = '`accounts`, `job`, `job_grade`, `group`, `position`, `inventory`, `skin`' -- Select these fields from the database
+	if Config.Multichar or Config.Identity then	-- append these fields to the select query
+		query = query..', `firstname`, `lastname`, `dateofbirth`, `sex`, `height`'
+	end
 
-	if Config.Multichar or Config.Identity then
-		query = query..', `firstname`, `lastname`, `dateofbirth`, `sex`, `height`' -- append these fields to the select query
+	if Config.Multichar then -- insert identity data with creation
 		MySQL.Async.store("INSERT INTO `users` SET `accounts` = ?, `identifier` = ?, `group` = ?, `firstname` = ?, `lastname` = ?, `dateofbirth` = ?, `sex` = ?, `height` = ?", function(storeId)
 			NewPlayer = storeId
 		end)
