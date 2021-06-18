@@ -78,7 +78,7 @@ function createESXPlayer(identifier, playerId, data)
 		defaultGroup = "user"
 	end
 
-	if not Config.Multichar and not Config.Identity then
+	if not Config.Multichar then
 		MySQL.Async.execute(NewPlayer, {
 				json.encode(accounts),
 				identifier,
