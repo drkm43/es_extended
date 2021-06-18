@@ -1,5 +1,5 @@
 {
-	"version": "linden-legacy",
-	"commit" : "1.3.1",
-	"changelog": "\n- Improved spawn event triggers\n- Improved support for relogging\n- Set PlayerData.dead initial value based on `is_dead` column (or 0)\n- Added a MySQL.store for the loadESXPlayer function\n- Added support for restarting resources after restarting es_extended (based on load order)\n- Minor fixes and optimisations"
+	"version": "linden",
+	"commit" : "1.3.2",
+	"changelog": "\n- Skin removed from PlayerData, sent as a separate argument\n- Fix for eternal loading when using Config.Identity and not Multichar\n- Stored queries now store the entire query\n- ESX.SetPlayerData changes to reduce unnecessary events\n (Update 1.3.3 is pending and will resolve some issues with multicharacter)"
 }
