@@ -283,9 +283,12 @@ ESX.DoesJobExist = function(job, grade)
 end
 
 ESX.GetJobs = function()
+	while next(ESX.Jobs) == nil do Citizen.Wait(500) end
 	return ESX.Jobs
 end
 
 ESX.GetItems = function()
+	while next(ESX.Items) == nil do Citizen.Wait(500) end
 	return ESX.Items
 end
+
