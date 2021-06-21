@@ -1,4 +1,4 @@
-<h4 align='center'>Notice: This is an unofficial fork of ESX Legacy<br>You must be using <a href='https://github.com/thelindat/linden_inventory'>my inventory</a> for this resource to work</h4>
+<h4 align='center'>Notice: This is an unofficial fork of ESX Legacy<br>You must be using <a href='https://github.com/thelindat/linden_inventory'>my inventory</a> for this resource to work<br>If you are using ESX_Multicharacter you will need to download the update branch.</h4>
 
 
 ## Changes for this branch
