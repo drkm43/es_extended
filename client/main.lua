@@ -225,7 +225,6 @@ function StartServerSyncLoops()
 		local previousCoords = vector3(ESX.PlayerData.coords.x, ESX.PlayerData.coords.y, ESX.PlayerData.coords.z)
 
 		while ESX.PlayerLoaded do
-			Citizen.Wait(2000)
 			local playerPed = PlayerPedId()
 			if ESX.PlayerData.ped ~= playerPed then ESX.SetPlayerData('ped', playerPed) end
 
@@ -240,6 +239,7 @@ function StartServerSyncLoops()
 					TriggerServerEvent('esx:updateCoords', formattedCoords)
 				end
 			end
+			Citizen.Wait(1500)
 		end
 	end)
 end
